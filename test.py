@@ -1,9 +1,6 @@
 import copy
 import random
 
-# 定义四个方向：上、下、左、右
-DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
 
 def eliminate_special_symbol(matrix,floor_multiple,this_rm_element):
     """
@@ -63,6 +60,8 @@ def find_adjacent(matrix, i, j):
     stack = [(i, j)]
     visited = [[False for _ in range(cols)] for _ in range(rows)]
     path = []
+    # 定义四个方向：上、下、左、右
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
     while stack:
         x, y = stack.pop()
@@ -78,7 +77,7 @@ def find_adjacent(matrix, i, j):
         path.append((x, y))
 
         # 将四个方向的点加入栈
-        for dx, dy in DIRECTIONS:
+        for dx, dy in directions:
             stack.append((x + dx, y + dy))
 
     return path
@@ -104,16 +103,20 @@ def add_element(matrix,reel_lines,add_new_element):
         matrix[r] = [random.randint(1,4) for _ in range(now_lines)] + matrix[r]
         add_new_element[r] = [random.randint(1,4) for _ in range(now_lines)] + add_new_element[r]
 
-def eliminate(matrix,floor_multiple,this_rm_element):
+def eliminate(matrix,floor_multiple,this_rm_element,total_win):
     """
-    消除所有相邻且相同且数量大于等于 5 的元素。
-    :param matrix: 二维数组
-    :return: 是否进行了消除操作
+        消除所有相邻相同且数量大于5的元素
+    :param matrix: 原始盘面
+    :param floor_multiple: 底板倍数
+    :param this_rm_element: 本次消除的元素盘面初始化
+    :param total_win: 分数
+    :return:
     """
     rows = len(matrix)
     cols = len(matrix[0]) if rows > 0 else 0
     to_zero = [[False for _ in range(cols)] for _ in range(rows)]
     eliminated = False
+    this_win = 0
 
     # 遍历每个元素
     for i in range(rows):
@@ -128,6 +131,7 @@ def eliminate(matrix,floor_multiple,this_rm_element):
             # 如果路径长度大于等于 5，标记需要归零
             if len(path) >= 5:
                 eliminated = True
+                this_floor_multiple = 0
                 for x, y in path:
                     this_rm_element[x][y] = matrix[i][j]
                     to_zero[x][y] = True
@@ -135,14 +139,21 @@ def eliminate(matrix,floor_multiple,this_rm_element):
                         floor_multiple[x][y] = 1
                     elif floor_multiple[x][y] < 1024:
                         floor_multiple[x][y] *= 2
+                    if floor_multiple[x][y] > 1:
+                        this_floor_multiple += floor_multiple[x][y]
+                if this_floor_multiple:
+                    this_win += this_floor_multiple * 1
+                else:
+                    this_win += 1 * 1
 
     # 将标记的位置归零
     for i in range(rows):
         for j in range(cols):
             if to_zero[i][j]:
                 matrix[i][j] = 0
-
-    return eliminated
+    total_win += this_win
+    print('本次消除分数是',total_win)
+    return eliminated,total_win
 
 
 # 调用函数
@@ -159,16 +170,15 @@ if __name__ == '__main__':
     print("初始化盘面")
     for item in matrix:
         print(item)
-    count = 0
     total_win = 0
     total_info = []
     floor_multiple = [[0 for _ in range(7)]for _ in range(7)]
     while True:
-        count += 1
         this_dict = {}
         this_rm_element = [[0 for _ in range(7)] for _ in range(7)]
         add_new_element = [[0 for _ in range(7)] for _ in range(7)]
-        if not eliminate(matrix,floor_multiple,this_rm_element) and not eliminate_special_symbol(matrix,floor_multiple,this_rm_element):
+        is_eliminate, total_win = eliminate(matrix, floor_multiple, this_rm_element, total_win)
+        if not is_eliminate and not eliminate_special_symbol(matrix,floor_multiple,this_rm_element):
             break
 
         new_matrix = copy.deepcopy(matrix)
@@ -214,3 +224,4 @@ if __name__ == '__main__':
                     print("新加入的盘面：")
                     for i in v:
                         print(i)
+    print('总分是',total_win)
