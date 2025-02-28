@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4d4f7053-2f28-4aaf-bb2f-2c0173b3d581" name="更改" comment="" />
+    <list default="true" id="4d4f7053-2f28-4aaf-bb2f-2c0173b3d581" name="更改" comment="主游戏，免费游戏初版本">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingCheck.py" beforeDir="false" afterPath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingCheck.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,6 +16,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "asdzxcqwe001"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/asdzxcqwe001/sugar_rush.git",
+    "accountId": "37000a13-605d-4fc0-8521-ebe511e7fe0e"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -86,8 +101,17 @@
       <updated>1740708369915</updated>
       <workItem from="1740708371013" duration="1540000" />
       <workItem from="1740709929548" duration="125000" />
-      <workItem from="1740710066349" duration="20045000" />
+      <workItem from="1740710066349" duration="24171000" />
     </task>
+    <task id="LOCAL-00001" summary="主游戏，免费游戏初版本">
+      <option name="closed" value="true" />
+      <created>1740736375225</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1740736375225</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -104,7 +128,11 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="主游戏，免费游戏初版本" />
+    <option name="LAST_COMMIT_MESSAGE" value="主游戏，免费游戏初版本" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/AW_ServerSugarRush$RunCashKing.coverage" NAME="RunCashKing 覆盖结果" MODIFIED="1740735974408" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/CashKing" />
+    <SUITE FILE_PATH="coverage/AW_ServerSugarRush$RunCashKing.coverage" NAME="RunCashKing 覆盖结果" MODIFIED="1740739542530" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/CashKing" />
   </component>
 </project>

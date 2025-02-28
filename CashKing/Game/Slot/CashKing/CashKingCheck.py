@@ -72,9 +72,10 @@ class CashKingCheck(MainGameCheckLine):
 
         main_result.set_extra_data('init__reel', copy.deepcopy(checkReel))
 
-        combo_arr = self.main_win_check(main_result, block_id, play_info, odds, checkReel, showReel, check_reel_length,check_reel_amount,extra_odds)
+        combo_arr,total_win = self.main_win_check(main_result, block_id, play_info, odds, checkReel, showReel, check_reel_length,check_reel_amount,extra_odds)
 
         main_result.set_extra_data('combo_arr',combo_arr)
+
 
 
     def free_game_symbol_check(self, main_result, block_id, play_info, special_odds, check_reel,
@@ -138,13 +139,14 @@ class CashKingCheck(MainGameCheckLine):
             combo_info = {}
             this_rm_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             add_new_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
-            is_eliminate, total_win = self._eliminate(check_reel, floor_multiple, this_rm_element, total_win,odds)
+            is_eliminate, this_win = self._eliminate(check_reel, floor_multiple, this_rm_element, total_win,odds)
             if not is_eliminate and not self._eliminate_special_symbol(check_reel, floor_multiple, this_rm_element):
                 break
-            combo_info['this_eliminate_mark'] = copy.deepcopy(total_win)
-            print('第%s次%s分'%(count,total_win))
-            # new_matrix = copy.deepcopy(check_reel)
-            # combo_info['eliminate'] = new_matrix
+            combo_info['this_eliminate_mark'] = this_win
+            print('第%s次%s分'%(count,this_win))
+
+            total_win += this_win
+
             combo_info['eliminate'] = copy.deepcopy(check_reel)
 
             combo_info['this_rm_element'] = this_rm_element
@@ -164,7 +166,7 @@ class CashKingCheck(MainGameCheckLine):
         reel_info = main_result.get_reel_block_data(block_id)
         main_result.this_win += int(total_win)
         print('总分', total_win)
-        return combo_arr
+        return combo_arr, total_win
 
     def _add_element(self,reel,add_new_element,all_reel_data,extra_odds):
         scatter_count = 0 # 记录scatter初始数量
@@ -246,7 +248,7 @@ class CashKingCheck(MainGameCheckLine):
                 if to_zero[i][j]:
                     reel[i][j] = 0
         total_win += this_win
-        return eliminated, total_win
+        return eliminated, this_win
 
     def _move_zero(self,reel, add_new_element):
         """
