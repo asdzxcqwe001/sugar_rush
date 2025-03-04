@@ -28,6 +28,9 @@ class CashKing(DefaultSlotCalculator):
     }
     ReverseSymbolIDMap = None#{v: k for k, v in SymbolIDMap.items()}
 
+    def _init_consts(self):
+        self.FreeGameId = 1
+        self.SuperFreeGameId = 2
 
     def get_init_reel_info(self, game_state):
         """
@@ -53,11 +56,10 @@ class CashKing(DefaultSlotCalculator):
     #     reel_key = "extra_" + str(reel_key) if is_extra_bet else str(reel_key)
     #     return gameInfo['main_reels'][reel_key]
 
-    def get_spin_reel_data(self, gameInfo, is_fever=False):
+    def get_spin_reel_data(self, game_info, is_fever=False, reel_key="0"):
         if is_fever:
-            return gameInfo['fever_reels']
-        else:
-            return gameInfo['main_reels']
+            return game_info['fever_reels'][reel_key]
+        return game_info['main_reels'][reel_key]
 
     def spin(self, bet_value, bet_lines, game_state, gameInfo, dev_mode=DevMode.NONE, special_input_data=None, **kwargs):
 
@@ -73,7 +75,7 @@ class CashKing(DefaultSlotCalculator):
         block_id = 0
         result = MainGameResult([block_id])
 
-        spin_reel_data = self.get_spin_reel_data(gameInfo)[str(100)]
+        spin_reel_data = self.get_spin_reel_data(gameInfo,is_extra_bet, "100")
         # fake_reel_data = extraOdds['FakeReelWeight'][str(bet_level)]
         # self._chance.get_result_reels(result, block_id, spin_reel_data, fake_reel_data, self.reel_length, self.reel_amount, dev_mode)
         self._chance.get_spin_result(result, block_id, spin_reel_data, self.reel_length, self.reel_amount,self.check_reel_length, self.check_reel_amount, dev_mode)
@@ -94,6 +96,111 @@ class CashKing(DefaultSlotCalculator):
             result.set_log_custom("Multi", result.get_temp_special_game_data("Multiplier"))
 
         return result
+
+    def next_fever(self, client_action, game_state, game_info, dev_mode=DevMode.NONE, **kwargs):
+        """ 特殊遊戲處理 """
+
+        print("[SugarRush][next_fever] client_action={}, game_state={}, game_info={}, dev_mode={}".format(
+            client_action, game_state, game_info, dev_mode))
+
+        special_game_id = game_state.current_sg_id  # 目前所在的特殊遊戲
+        fever_result = FeverLevelResult(special_game_id)  # 最後要回傳的內容
+
+        # 遊戲狀態非特殊遊戲
+        if not game_state.is_special_game:
+            self.logger.error("[SugarRush][next_fever] Not in special game, game:{}".format(self._game_id))
+            fever_result.error = True
+            return fever_result
+
+        # sg_id 對不起來
+        if client_action['client_sg_id'] != game_state.current_sg_id:
+            self.logger.error("[SugarRush][next_fever] client_sg_id:{} != current_sg_id:{}".format(
+                client_action['client_sg_id'], game_state.current_sg_id))
+            fever_result.error = True
+            return fever_result
+
+        dev_mode = DevMode.NONE
+        # 這邊依照遊戲自行設計
+        if special_game_id == self.FreeGameId:
+            self.free_game(fever_result, client_action, game_state, game_info, dev_mode)
+        elif special_game_id == self.SuperFreeGameId:
+            self.super_free_game(fever_result, client_action, game_state, game_info, dev_mode)
+        else:
+            # 未知的特殊遊戲
+            raise Exception("[ERROR] Error Special Game id:{}, game:{}".format(special_game_id, self._game_id))
+
+        return fever_result
+
+    def free_game(self, fever_result, client_action, game_state, game_info, dev_mode):
+        """ 特殊遊戲: FreeGame
+
+        Args:
+            fever_result (FeverLevelResult): 要回傳的結果
+            client_action (dict): client 傳來的自訂資料，如果 client 需要作什麼選擇時會用到
+            game_state (MainGameState): 遊戲狀態
+            game_info (dict): 跟機率 (prod_id) 對應的 Info 資料
+            dev_mode (DevMode): 測試模式 trigger
+        """
+        # 特殊遊戲基本資料
+        special_game_id = game_state.current_sg_id  # 特殊遊戲ID
+        special_game_state = game_state.current_special_game_data  # 該特殊遊戲的資料
+        bet_lines = special_game_state['current_line']  # 押注線數
+        bet_value = special_game_state['current_bet']  # 押注倍數
+        current_level = special_game_state['current_level']  # 目前特殊遊戲的狀態
+        current_script = special_game_state.get('current_script', {})  # 對應特殊遊戲的暫存內容 (自定義資料)
+        is_extra_bet = special_game_state.get('is_extra_bet', False)  # 是否有額外押注
+        extra_odds = game_info.get('extra_odds', {})
+        block_id = 0
+
+        # 準備 play_info
+        play_info = MainGamePlayInfo()
+        play_info.SpecialGame = special_game_id
+        play_info.set_bet_info(bet_value, bet_lines)
+
+        main_result = MainGameResult([block_id])
+        if current_level == 1:
+            fever_result.fever_map = FeverMap(1)
+            spin_reel_data = self.get_spin_reel_data(game_info,True, "mid")
+            self._check.get_spin_result(main_result,block_id,spin_reel_data,self.reel_length,self.reel_amount,self.check_reel_length,self.check_reel_amount,dev_mode)
+
+            fever_result.fever_map.append("result",main_result.export_ex_wheel_block_result())
+            fever_result.fever_map.append("total_times",special_game_state['current_script']['total_times'])
+            special_game_state['current_level'] += 1
+            _,fg_type = self.randomer.get_result_by_weight(
+                extra_odds['fg_type']['result'],
+                extra_odds['fg_type']['weight'],
+            )
+            special_game_state['fg_type'] = fg_type
+        elif current_level == 2:
+            result = MainGameResult([block_id])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            result.get_temp_special_game_data("win_times",0)
+
+
+    def super_free_game(self, fever_result, client_action, game_state, game_info, dev_mode):
+        pass
 
     def bonus_win(self, main_result, play_info, extra_odds, bet_level, dev_mode=DevMode.NONE):
         bonus_odds = [odds * play_info.total_bet for odds in extra_odds["Bonus"][str(play_info.GameLineBet)]["Odds"]]

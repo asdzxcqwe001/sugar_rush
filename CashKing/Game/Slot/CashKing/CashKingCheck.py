@@ -52,6 +52,8 @@ class CashKingCheck(MainGameCheckLine):
         # ====================================================
         # show_reel: game log顯示的牌面, check_reel: 檢查各種獎項使用的牌面
         # 若有修改到show_reel，最後需要存回main_result
+
+
         showReel = self.get_check_reel(main_result, block_id, reel_length, reel_amount, check_reel_length, check_reel_amount, transform=False)
         scatter_count = 0
         for row in range(check_reel_amount):
@@ -59,16 +61,19 @@ class CashKingCheck(MainGameCheckLine):
                 amount_scatter_count = 0
                 if showReel[row][col] == self.SpecialSymbolID:
                     scatter_weight = random.random()
-                    if scatter_weight < extra_odds['base_trigger_scatter'][scatter_count] and amount_scatter_count < 1:
-                        showReel[row][col] = self.ScatterSymbolID
-                        amount_scatter_count += 1
-                        scatter_count += 1
+                    if not play_info.is_special_game:
+                        if scatter_weight < extra_odds['base_trigger_scatter'][scatter_count] and amount_scatter_count < 1:
+                            showReel[row][col] = self.ScatterSymbolID
+                            amount_scatter_count += 1
+                            scatter_count += 1
+                        else:
+                            showReel[row][col] = random.choice(self.CommonSymbolIdList)
                     else:
-                        showReel[row][col] = random.choice(self.CommonSymbolIdList)
+                        pass
 
         checkReel = [[i for i in row] for row in showReel]
         main_result.set_temp_special_game_data("CheckReel", checkReel)
-        self.free_game_symbol_check(main_result,block_id,play_info,special_odds,checkReel,self.FreeGameId)
+        self.free_game_symbol_check(main_result,block_id,play_info,extra_odds,checkReel,self.FreeGameId)
 
         main_result.set_extra_data('init__reel', copy.deepcopy(checkReel))
 
@@ -78,7 +83,7 @@ class CashKingCheck(MainGameCheckLine):
 
 
 
-    def free_game_symbol_check(self, main_result, block_id, play_info, special_odds, check_reel,
+    def free_game_symbol_check(self, main_result, block_id, play_info, extra_odds, check_reel,
                                free_game_id):
 
         reel_info = main_result.get_reel_block_data(block_id)
@@ -92,9 +97,9 @@ class CashKingCheck(MainGameCheckLine):
 
         # 大于等于指定数量 概率触发免费 或增加免费次数
         if (play_info.is_special_game and scatter_count >= self.TriggerAddMinCount) or (not play_info.is_special_game and scatter_count >= self.TriggerFreeMinCount):
-            key = "fever" if not play_info.is_special_game else "fever_again"
+            key = "base_trigger_scatter" if not play_info.is_special_game else "free_re_trigger"
             # 赢到的次数
-            win_times = special_odds[key][scatter_count]
+            win_times = extra_odds[key][scatter_count]
             reel_info.set_special_symbol_win_pos(free_game_id, symbol_pos)
             main_result.set_win_special_game(free_game_id, win_times)
             if not play_info.is_special_game:
@@ -129,13 +134,16 @@ class CashKingCheck(MainGameCheckLine):
         """
         count = 0 # 随时可删除
 
-
         total_win = 0
         combo_arr = []
         floor_multiple = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
         while True:
             count += 1# 随时可删除
 
+
+
+            if not play_info.is_special_game:
+                floor_multiple = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             combo_info = {}
             this_rm_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             add_new_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
@@ -187,7 +195,7 @@ class CashKingCheck(MainGameCheckLine):
                 temp_show_reel.append(now_reel_data[c])
             # 如果后生成的盘面中有特殊图标，则判断是否生成scatter 还是普通图标
             if self.SpecialSymbolID in temp_show_reel:
-                # TODO 148行以后的base_trigger_scatter可能改成变量
+                # TODO 以后的base_trigger_scatter可能改成变量
                 if random.random() < extra_odds['base_trigger_scatter'][scatter_count] and not amount_scatter_count:
                     temp_show_reel[temp_show_reel.index(self.SpecialSymbolID)] = self.ScatterSymbolID
                     amount_scatter_count += 1
