@@ -21,8 +21,10 @@ class CashKingCheck(MainGameCheckLine):
         self.CommonSymbolIdList = [1,2,3,4,5,6,7]
         # 免费游戏id
         self.FreeGameId = 1
+        # 购买免费游戏id
+        self.ByBonusGameId = 2
         # 超级免费游戏id
-        self.SuperFreeGameId = 2
+        self.SuperByBonusGameId = 3
         # 触发进入免费游戏的特殊图标最小次数
         self.TriggerFreeMinCount = 3
         # 在免费游戏中增加免费游戏次数的特殊图标出现数量最小次数
@@ -128,7 +130,7 @@ class CashKingCheck(MainGameCheckLine):
                         break
 
         # main_result.set_temp_special_game_data("CheckReel", checkReel)
-        self.free_game_symbol_check(main_result,block_id,play_info,extra_odds,checkReel,self.FreeGameId)
+        self.free_game_symbol_check(main_result,block_id,play_info,extra_odds,checkReel)
 
         combo_arr,total_win = self.main_win_check(main_result, block_id, play_info, odds, checkReel, showReel, check_reel_length,check_reel_amount,extra_odds)
 
@@ -136,8 +138,7 @@ class CashKingCheck(MainGameCheckLine):
 
 
 
-    def free_game_symbol_check(self, main_result, block_id, play_info, extra_odds, check_reel,
-                               free_game_id):
+    def free_game_symbol_check(self, main_result, block_id, play_info, extra_odds, check_reel):
 
         reel_info = main_result.get_reel_block_data(block_id)
         symbol_pos = [[-1 for row in range(len(check_reel[col]))] for col in range(len(check_reel))]
@@ -153,14 +154,44 @@ class CashKingCheck(MainGameCheckLine):
             key = "base_trigger_scatter" if not play_info.is_special_game else "free_re_trigger"
             # 赢到的次数
             win_times = extra_odds[key][scatter_count]
-            reel_info.set_special_symbol_win_pos(free_game_id, symbol_pos)
-            main_result.set_win_special_game(free_game_id, win_times)
+            reel_info.set_special_symbol_win_pos(self.FreeGameId, symbol_pos)
+            main_result.set_win_special_game(self.FreeGameId, win_times)
             if not play_info.is_special_game:
                 current_script = {
                     'main_reel': reel_info.reel_data,
-                    'game_type': free_game_id,
+                    'game_type': self.FreeGameId,
                 }
-                self.set_win_special_symbol_info(main_result, block_id, free_game_id, self.ScatterSymbolID, symbol_pos,
+                self.set_win_special_symbol_info(main_result, block_id, self.FreeGameId, self.ScatterSymbolID, symbol_pos,
+                                                 win_times, current_script)
+            else:
+                main_result.set_temp_special_game_data("win_times", win_times)
+        elif ((play_info.is_special_game and scatter_count >= self.TriggerAddMinCount) or (not play_info.is_special_game and scatter_count >= self.TriggerFreeMinCount)) and '客户端传来的是购买免费游戏的':
+            key = "base_trigger_scatter" if not play_info.is_special_game else "free_re_trigger"
+            # 赢到的次数
+            win_times = extra_odds[key][scatter_count]
+            reel_info.set_special_symbol_win_pos(self.ByBonusGameId, symbol_pos)
+            main_result.set_win_special_game(self.ByBonusGameId, win_times)
+            if not play_info.is_special_game:
+                current_script = {
+                    'main_reel': reel_info.reel_data,
+                    'game_type': self.ByBonusGameId,
+                }
+                self.set_win_special_symbol_info(main_result, block_id, self.ByBonusGameId, self.ScatterSymbolID, symbol_pos,
+                                                 win_times, current_script)
+            else:
+                main_result.set_temp_special_game_data("win_times", win_times)
+        elif ((play_info.is_special_game and scatter_count >= self.TriggerAddMinCount) or (not play_info.is_special_game and scatter_count >= self.TriggerFreeMinCount)) and '客户端传来的是满足超级免费游戏的':
+            key = "base_trigger_scatter" if not play_info.is_special_game else "free_re_trigger"
+            # 赢到的次数
+            win_times = extra_odds[key][scatter_count]
+            reel_info.set_special_symbol_win_pos(self.SuperByBonusGameId, symbol_pos)
+            main_result.set_win_special_game(self.SuperByBonusGameId, win_times)
+            if not play_info.is_special_game:
+                current_script = {
+                    'main_reel': reel_info.reel_data,
+                    'game_type': self.SuperByBonusGameId,
+                }
+                self.set_win_special_symbol_info(main_result, block_id, self.SuperByBonusGameId, self.ScatterSymbolID, symbol_pos,
                                                  win_times, current_script)
             else:
                 main_result.set_temp_special_game_data("win_times", win_times)

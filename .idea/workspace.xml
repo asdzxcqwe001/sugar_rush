@@ -4,11 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4d4f7053-2f28-4aaf-bb2f-2c0173b3d581" name="更改" comment="增加部分免费游戏">
+    <list default="true" id="4d4f7053-2f28-4aaf-bb2f-2c0173b3d581" name="更改" comment="增加部分免费游戏1.1">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKing.py" beforeDir="false" afterPath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingCheck.py" beforeDir="false" afterPath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingCheck.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingInfo.py" beforeDir="false" afterPath="$PROJECT_DIR$/CashKing/Game/Slot/CashKing/CashKingInfo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CashKing/RunCashKing.py" beforeDir="false" afterPath="$PROJECT_DIR$/CashKing/RunCashKing.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +56,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.RunSimulationSlotLobby">
+  <component name="RunManager" selected="Python.RunCashKing">
     <configuration name="RunCashKing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="AW_ServerSugarRush" />
       <option name="ENV_FILES" value="" />
@@ -105,8 +105,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.RunSimulationSlotLobby" />
         <item itemvalue="Python.RunCashKing" />
+        <item itemvalue="Python.RunSimulationSlotLobby" />
       </list>
     </recent_temporary>
   </component>
@@ -128,7 +128,7 @@
       <updated>1740708369915</updated>
       <workItem from="1740708371013" duration="1540000" />
       <workItem from="1740709929548" duration="125000" />
-      <workItem from="1740710066349" duration="74950000" />
+      <workItem from="1740710066349" duration="78102000" />
     </task>
     <task id="LOCAL-00001" summary="主游戏，免费游戏初版本">
       <option name="closed" value="true" />
@@ -154,7 +154,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741066205906</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="增加部分免费游戏1.1">
+      <option name="closed" value="true" />
+      <created>1741141807700</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1741141807700</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -175,10 +183,11 @@
     <MESSAGE value="主游戏，免费游戏初版本" />
     <MESSAGE value="给客户端传当前分数逻辑改动" />
     <MESSAGE value="增加部分免费游戏" />
-    <option name="LAST_COMMIT_MESSAGE" value="增加部分免费游戏" />
+    <MESSAGE value="增加部分免费游戏1.1" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加部分免费游戏1.1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/AW_ServerSugarRush$RunCashKing.coverage" NAME="RunCashKing 覆盖结果" MODIFIED="1740739542530" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/CashKing" />
+    <SUITE FILE_PATH="coverage/AW_ServerSugarRush$RunCashKing.coverage" NAME="RunCashKing 覆盖结果" MODIFIED="1741142601989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/CashKing" />
     <SUITE FILE_PATH="coverage/AW_ServerSugarRush$RunSimulationSlotLobby.coverage" NAME="RunSimulationSlotLobby 覆盖结果" MODIFIED="1740991531896" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/CashKing" />
   </component>
 </project>
