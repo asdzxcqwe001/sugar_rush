@@ -31,9 +31,11 @@ class CashKingCheck(MainGameCheckLine):
         self.MaxMulti = 1024
         # 满足相邻消除的个数
         self.RemoveCount = 5
+        # 最大获取分数，大于则推出
+        self.MaxWin = 10000
 
     def game_check(self, main_result, block_id, play_info, odds, special_odds, extra_odds, reel_length, reel_amount,
-                   check_reel_length, check_reel_amount, bet_level=0, SymbolIDMap=None, ReverseSymbolIDMap=None, PlatRatio=None):
+                   check_reel_length, check_reel_amount):
         """
         :param main_result: 這次spin的所有資訊
         :param feature_reel: main game命中的feature在哪一輪，若-1表示沒中
@@ -52,8 +54,7 @@ class CashKingCheck(MainGameCheckLine):
         # ====================================================
         # show_reel: game log顯示的牌面, check_reel: 檢查各種獎項使用的牌面
         # 若有修改到show_reel，最後需要存回main_result
-
-
+        fg_type = main_result.get_temp_special_game_data('fg_type')
         showReel = self.get_check_reel(main_result, block_id, reel_length, reel_amount, check_reel_length, check_reel_amount, transform=False)
         scatter_count = 0
         for row in range(check_reel_amount):
@@ -69,13 +70,65 @@ class CashKingCheck(MainGameCheckLine):
                         else:
                             showReel[row][col] = random.choice(self.CommonSymbolIdList)
                     else:
-                        pass
+                        current_win_times = main_result.get_temp_special_game_data("current_win_times")
+                        if current_win_times <= 20:
+                            add_scatter_by_weight = 20
+                        elif current_win_times <= 30:
+                            add_scatter_by_weight = 30
+                        elif current_win_times <= 35:
+                            add_scatter_by_weight = 35
+                        elif current_win_times <= 38:
+                            add_scatter_by_weight = 38
+                        elif current_win_times <= 40:
+                            add_scatter_by_weight = 40
+                        elif current_win_times <= 45:
+                            add_scatter_by_weight = 45
+                        else:
+                            add_scatter_by_weight = 50
 
+                        if scatter_weight < extra_odds['free_trigger_scatter'][fg_type][str(add_scatter_by_weight)][scatter_count] and amount_scatter_count < 1:
+                            showReel[row][col] = self.ScatterSymbolID
+                            amount_scatter_count += 1
+                            scatter_count += 1
+                        else:
+                            showReel[row][col] = random.choice(self.CommonSymbolIdList)
         checkReel = [[i for i in row] for row in showReel]
-        main_result.set_temp_special_game_data("CheckReel", checkReel)
-        self.free_game_symbol_check(main_result,block_id,play_info,extra_odds,checkReel,self.FreeGameId)
-
         main_result.set_extra_data('init__reel', copy.deepcopy(checkReel))
+        if play_info.is_special_game and '客户端传过来的是：super':
+            while True:
+                r = random.randint(0,6)
+                c = random.randint(0,6)
+                if checkReel[r][c] not in [self.ScatterSymbolID,self.BombSymbolID]:
+                    checkReel[r][c] = self.BombSymbolID
+                    # mystery玩法更改炸弹之后的盘面
+                    main_result.set_extra_data('mystery_reel', copy.deepcopy(checkReel))
+                    break
+        elif play_info.is_special_game and '客户端传过来的是：free':
+
+            while True:
+                r = random.randint(0,6)
+                c = random.randint(0,6)
+                num = random.random()
+                if num < extra_odds['free_mystery'][fg_type]:
+                    if checkReel[r][c] not in [self.ScatterSymbolID,self.BombSymbolID]:
+                        checkReel[r][c] = self.BombSymbolID
+                        # mystery玩法更改炸弹之后的盘面
+                        main_result.set_extra_data('mystery_reel', copy.deepcopy(checkReel))
+                        break
+        elif play_info.is_special_game and '客户端传过来的是：by_bonus':
+            while True:
+                r = random.randint(0,6)
+                c = random.randint(0,6)
+                num = random.random()
+                if num < extra_odds['free_mystery'][fg_type]:
+                    if checkReel[r][c] not in [self.ScatterSymbolID,self.BombSymbolID]:
+                        checkReel[r][c] = self.BombSymbolID
+                        # mystery玩法更改炸弹之后的盘面
+                        main_result.set_extra_data('mystery_reel', copy.deepcopy(checkReel))
+                        break
+
+        # main_result.set_temp_special_game_data("CheckReel", checkReel)
+        self.free_game_symbol_check(main_result,block_id,play_info,extra_odds,checkReel,self.FreeGameId)
 
         combo_arr,total_win = self.main_win_check(main_result, block_id, play_info, odds, checkReel, showReel, check_reel_length,check_reel_amount,extra_odds)
 
@@ -148,7 +201,7 @@ class CashKingCheck(MainGameCheckLine):
             this_rm_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             add_new_element = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             is_eliminate, this_win = self._eliminate(check_reel, floor_multiple, this_rm_element, total_win,odds)
-            if not is_eliminate and not self._eliminate_special_symbol(check_reel, floor_multiple, this_rm_element):
+            if (not is_eliminate and not self._eliminate_special_symbol(check_reel, floor_multiple, this_rm_element)) or total_win > self.MaxWin:
                 break
             combo_info['this_eliminate_mark'] = this_win
             print('第%s次%s分'%(count,this_win))
@@ -295,7 +348,7 @@ class CashKingCheck(MainGameCheckLine):
                 continue  # 超出边界
             if reel[x][y] != target or visited[x][y]:
                 continue  # 值不匹配或已经访问过
-            if reel[x][y] in [99, 92]:
+            if reel[x][y] in [94, 92]:
                 continue  # 炸弹图标或scatter图标不记录
 
             # 标记当前点为已访问，并加入路径
@@ -324,6 +377,7 @@ class CashKingCheck(MainGameCheckLine):
 
         # 记录需要归零的位置
         to_zero = [[False for _ in range(cols)] for _ in range(rows)]
+        # 是否出现了炸弹
         is_bomb = False
 
         # 遍历数组，查找是否有炸弹

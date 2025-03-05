@@ -30,7 +30,8 @@ class CashKing(DefaultSlotCalculator):
 
     def _init_consts(self):
         self.FreeGameId = 1
-        self.SuperFreeGameId = 2
+        self.ByBonusFreeGameId = 2
+        self.SuperFreeGameId = 3
 
     def get_init_reel_info(self, game_state):
         """
@@ -81,7 +82,7 @@ class CashKing(DefaultSlotCalculator):
         self._chance.get_spin_result(result, block_id, spin_reel_data, self.reel_length, self.reel_amount,self.check_reel_length, self.check_reel_amount, dev_mode)
 
         self._check.game_check(result, block_id, play_info, self._odds, self._special_odds, extraOdds,
-                               self.reel_length, self.reel_amount, self.check_reel_length, self.check_reel_amount, bet_level=bet_level, SymbolIDMap=self.SymbolIDMap, ReverseSymbolIDMap=self.ReverseSymbolIDMap, PlatRatio=PlatRatio)
+                               self.reel_length, self.reel_amount, self.check_reel_length, self.check_reel_amount)
         main_win = result.this_win
         bonus_win = 0
         if result.get_temp_special_game_data("Bonus", False):
@@ -123,6 +124,8 @@ class CashKing(DefaultSlotCalculator):
         # 這邊依照遊戲自行設計
         if special_game_id == self.FreeGameId:
             self.free_game(fever_result, client_action, game_state, game_info, dev_mode)
+        elif special_game_id == self.ByBonusFreeGameId:
+            self.by_bonus_free_game(fever_result, client_action, game_state, game_info, dev_mode)
         elif special_game_id == self.SuperFreeGameId:
             self.super_free_game(fever_result, client_action, game_state, game_info, dev_mode)
         else:
@@ -165,16 +168,51 @@ class CashKing(DefaultSlotCalculator):
 
             fever_result.fever_map.append("result",main_result.export_ex_wheel_block_result())
             fever_result.fever_map.append("total_times",special_game_state['current_script']['total_times'])
+            special_game_state['current_win_times'] = 0
             special_game_state['current_level'] += 1
             _,fg_type = self.randomer.get_result_by_weight(
                 extra_odds['fg_type']['result'],
-                extra_odds['fg_type']['weight'],
+                extra_odds['fg_type']['weight_fg'],
             )
+            main_result.set_temp_special_game_data("fg_type", fg_type)
             special_game_state['fg_type'] = fg_type
         elif current_level == 2:
             result = MainGameResult([block_id])
+            fg_type = special_game_state['fg_type']
+            result.set_temp_special_game_data('current_win_times',special_game_state['current_win_times'])
+            special_game_state['current_win_times'] += 1
+            spin_reel_data = self.get_spin_reel_data(game_info,True, fg_type)
+            self._chance.get_spin_result(result, block_id, spin_reel_data, self.reel_length, self.reel_amount,
+                                         self.check_reel_length, self.check_reel_amount, dev_mode)
 
+            self._check.game_check(result, block_id, play_info, self._odds, self._special_odds, extra_odds,
+                                   self.reel_length, self.reel_amount, self.check_reel_length, self.check_reel_amount,)
 
+            win_times = result.get_temp_special_game_data("win_times",0)
+            # 扣手數
+            special_game_state['current_script']['current_times'] += (win_times - 1)
+            fever_result.win_fever_times += win_times
+
+            # 檢查結束
+            if special_game_state['current_script']['current_times'] <= 0:
+                fever_result.is_gameover = True
+
+            fever_result.win_amount = result.this_win
+
+            # 整理回傳的資料
+            if fever_result.is_gameover:
+                fever_result.fever_map = FeverMap(4)
+                fever_result.fever_map.append("main_reels", special_game_state['current_script']['main_reel'])
+            else:
+                fever_result.fever_map = FeverMap(2)
+
+            fever_result.fever_map.append("current_times", special_game_state['current_script']['current_times'])
+            fever_result.fever_map.append("total_times", special_game_state['current_script']['total_times'])
+
+            fever_result.fever_map.append("result", result.export_ex_wheel_block_result())
+            fever_result.fever_map.append("extra_data", result.extra_data)
+            fever_result.last_reel = result.spin_reels
+            fever_result.show_reel = result.show_reel
 
 
 
@@ -199,7 +237,14 @@ class CashKing(DefaultSlotCalculator):
             result.get_temp_special_game_data("win_times",0)
 
 
+
     def super_free_game(self, fever_result, client_action, game_state, game_info, dev_mode):
+        pass
+
+    def by_bonus_free_game(self, fever_result, client_action, game_state, game_info, dev_mode):
+        pass
+
+    def by_bonus_super_free_game(self, fever_result, client_action, game_state, game_info, dev_mode):
         pass
 
     def bonus_win(self, main_result, play_info, extra_odds, bet_level, dev_mode=DevMode.NONE):
@@ -258,6 +303,7 @@ class CashKing(DefaultSlotCalculator):
             is_golden = bonus_game["Win"] == max(bonus_game["Bill"])
             feature_win_log.append({'feature_id': 2 if is_golden else 1, "win": bonus_game["Win"]})
         return feature_win_log
+
 
 
 
