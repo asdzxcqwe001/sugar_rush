@@ -33,7 +33,7 @@ class CashKingCheck(MainGameCheckLine):
         self.MaxMulti = 1024
         # 满足相邻消除的个数
         self.RemoveCount = 5
-        # 最大获取分数，大于则推出
+        # 最大获取分数，大于则退出
         self.MaxWin = 10000
 
     def game_check(self, main_result, block_id, play_info, odds, special_odds, extra_odds, reel_length, reel_amount,
@@ -72,23 +72,24 @@ class CashKingCheck(MainGameCheckLine):
                         else:
                             showReel[row][col] = random.choice(self.CommonSymbolIdList)
                     else:
-                        current_win_times = main_result.get_temp_special_game_data("current_win_times")
-                        if current_win_times <= 20:
-                            add_scatter_by_weight = 20
-                        elif current_win_times <= 30:
-                            add_scatter_by_weight = 30
-                        elif current_win_times <= 35:
-                            add_scatter_by_weight = 35
-                        elif current_win_times <= 38:
-                            add_scatter_by_weight = 38
-                        elif current_win_times <= 40:
-                            add_scatter_by_weight = 40
-                        elif current_win_times <= 45:
-                            add_scatter_by_weight = 45
-                        else:
-                            add_scatter_by_weight = 50
+                        # current_win_times = main_result.get_temp_special_game_data("current_win_times")
+                        # if current_win_times <= 20:
+                        #     add_scatter_by_weight = 20
+                        # elif current_win_times <= 30:
+                        #     add_scatter_by_weight = 30
+                        # elif current_win_times <= 35:
+                        #     add_scatter_by_weight = 35
+                        # elif current_win_times <= 38:
+                        #     add_scatter_by_weight = 38
+                        # elif current_win_times <= 40:
+                        #     add_scatter_by_weight = 40
+                        # elif current_win_times <= 45:
+                        #     add_scatter_by_weight = 45
+                        # else:
+                        #     add_scatter_by_weight = 50
 
-                        if scatter_weight < extra_odds['free_trigger_scatter'][fg_type][str(add_scatter_by_weight)][scatter_count] and amount_scatter_count < 1:
+                        # if scatter_weight < extra_odds['free_trigger_scatter'][fg_type][str(add_scatter_by_weight)][scatter_count] and amount_scatter_count < 1:
+                        if scatter_weight < extra_odds['free_trigger_scatter'][fg_type][self._get_current_win_times(main_result)][scatter_count] and amount_scatter_count < 1:
                             showReel[row][col] = self.ScatterSymbolID
                             amount_scatter_count += 1
                             scatter_count += 1
@@ -135,7 +136,6 @@ class CashKingCheck(MainGameCheckLine):
         combo_arr,total_win = self.main_win_check(main_result, block_id, play_info, odds, checkReel, showReel, check_reel_length,check_reel_amount,extra_odds)
 
         main_result.set_extra_data('combo_arr',combo_arr)
-
 
 
     def free_game_symbol_check(self, main_result, block_id, play_info, extra_odds, check_reel):
@@ -224,8 +224,6 @@ class CashKingCheck(MainGameCheckLine):
         while True:
             count += 1# 随时可删除
 
-
-
             if not play_info.is_special_game:
                 floor_multiple = [[0 for _ in range(check_reel_length)] for _ in range(check_reel_amount)]
             combo_info = {}
@@ -245,7 +243,7 @@ class CashKingCheck(MainGameCheckLine):
 
             self._move_zero(check_reel, add_new_element)
             # TODO 先用固定死主游戏卷轴，后续会改
-            self._add_element(check_reel, add_new_element, GameInfo[0]["main_reels"]['100'],extra_odds)
+            self._add_element(main_result,play_info,check_reel, add_new_element, GameInfo[0]["main_reels"]['100']if not play_info.is_special_game else GameInfo[0]["fever_reels"][main_result.get_temp_special_game_data('fg_type')],extra_odds)
             combo_info['add_new_position'] = add_new_element
 
             new_floor_multiple = copy.deepcopy(floor_multiple)
@@ -260,7 +258,24 @@ class CashKingCheck(MainGameCheckLine):
         print('总分', total_win)
         return combo_arr, total_win
 
-    def _add_element(self,reel,add_new_element,all_reel_data,extra_odds):
+    def _get_current_win_times(self,main_result):
+        current_win_times = main_result.get_temp_special_game_data("current_win_times")
+        if current_win_times <= 20:
+            return '20'
+        elif current_win_times <= 30:
+            return '30'
+        elif current_win_times <= 35:
+            return '35'
+        elif current_win_times <= 38:
+            return '38'
+        elif current_win_times <= 40:
+            return '40'
+        elif current_win_times <= 45:
+            return '45'
+        else:
+            return '50'
+
+    def _add_element(self,main_result,play_info,reel,add_new_element,all_reel_data,extra_odds):
         scatter_count = 0 # 记录scatter初始数量
         for r in range(len(reel)):
             temp_show_reel = list()
@@ -279,8 +294,13 @@ class CashKingCheck(MainGameCheckLine):
                 temp_show_reel.append(now_reel_data[c])
             # 如果后生成的盘面中有特殊图标，则判断是否生成scatter 还是普通图标
             if self.SpecialSymbolID in temp_show_reel:
+
                 # TODO 以后的base_trigger_scatter可能改成变量
-                if random.random() < extra_odds['base_trigger_scatter'][scatter_count] and not amount_scatter_count:
+                trigger_scatter = extra_odds['base_trigger_scatter']
+                if play_info.is_special_game:
+                    trigger_scatter = extra_odds['free_trigger_scatter'][main_result.get_temp_special_game_data('fg_type')][self._get_current_win_times(main_result)]
+                # if random.random() < extra_odds['base_trigger_scatter'][scatter_count] and not amount_scatter_count:
+                if random.random() < trigger_scatter[scatter_count] and not amount_scatter_count:
                     temp_show_reel[temp_show_reel.index(self.SpecialSymbolID)] = self.ScatterSymbolID
                     amount_scatter_count += 1
                     scatter_count += 1
